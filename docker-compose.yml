@@ -1,0 +1,9 @@
+version: "3.9"
+services:
+  cpp-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app
+    command: ./program
