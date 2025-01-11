@@ -1,352 +1,208 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include <map>
-#include <ctime>
 #include <iomanip>
-#include <fstream>
 
+using namespace std;
 
-// Product class for inventory management
-class Product {
-    std::string id;
-    std::string name;
+struct Product {
+    string id;
+    string name;
     double price;
     int stock;
-    time_t expiryDate;
-
-public:
-    Product(const std::string& id, const std::string& name, double price, int stock, time_t expiry)
-        : id(id), name(name), price(price), stock(stock), expiryDate(expiry) {}
-
-    const std::string& getId() const { return id; }
-    const std::string& getName() const { return name; }
-    double getPrice() const { return price; }
-    int getStock() const { return stock; }
-    void setStock(int quantity) { stock = quantity; }
-    void reduceStock(int quantity) { stock -= quantity; }
-
-    bool isLowStock() const { return stock < 10; }
 };
 
-// Admin functionalities
-class AdminSystem {
-    std::vector<Product> inventory;
-    double totalSales = 0.0;
-    int totalTransactions = 0;
-
-public:
-
-     AdminSystem() {
-        inventory.emplace_back("001", "Mie Instan", 3000.0, 50, 0);
-        inventory.emplace_back("002", "Kopi", 5000.0, 30, 0);
-    }
-
-    void addProduct() {
-        std::string id, name;
-        double price;
-        int stock;
-
-        std::cout << "Enter product code (3 digits): ";
-        std::cin >> id;
-        std::cout << "Enter product name: ";
-        std::cin.ignore();
-        std::getline(std::cin, name);
-        std::cout << "Enter selling price: ";
-        std::cin >> price;
-        std::cout << "Enter initial stock: ";
-        std::cin >> stock;
-
-        Product product(id, name, price, stock, 0);
-        inventory.push_back(product);
-        std::cout << "Product added successfully!\n";
-    }
-
-    void viewProducts() {
-        std::cout << "\nProduct List:\n";
-        for (const auto& product : inventory) {
-            std::cout << "ID: " << product.getId() << ", Name: " << product.getName() 
-                      << ", Price: " << product.getPrice() << ", Stock: " << product.getStock() << "\n";
-        }
-    }
-
-    void updateStock() {
-        std::string productId;
-        int stock;
-
-        std::cout << "Enter product code to update stock: ";
-        std::cin >> productId;
-        std::cout << "Enter stock to add: ";
-        std::cin >> stock;
-
-        for (auto& product : inventory) {
-            if (product.getId() == productId) {
-                product.setStock(product.getStock() + stock);
-                std::cout << "Stock updated successfully!\n";
-                return;
-            }
-        }
-
-        std::cout << "Product not found!\n";
-    }
-
-void generateReport() {
-    std::cout << "\nDaily Sales Report:\n";
-    std::cout << "Total Transactions: " << totalTransactions << "\n";
-    std::cout << "Total Revenue: " << std::fixed << std::setprecision(2) << totalSales << "\n";
-
-    // Save report to file
-    std::ofstream reportFile("daily_report.txt");
-    if (reportFile.is_open()) {
-        reportFile << "Daily Sales Report\n";
-        reportFile << "===================\n";
-        reportFile << "Total Transactions: " << totalTransactions << "\n";
-        reportFile << "Total Revenue: " << std::fixed << std::setprecision(2) << totalSales << "\n";
-        reportFile.close();
-        std::cout << "Report has been saved to 'daily_report.txt'.\n";
-    } else {
-        std::cout << "Failed to save the report to file.\n";
+void viewProducts(const vector<Product>& inventory) {
+    cout << "\nDaftar Produk:\n";
+    cout << "ID\tNama\t\tHarga\tStok\n";
+    cout << "----------------------------------\n";
+    for (const auto& product : inventory) {
+        cout << product.id << "\t" 
+             << product.name << "\t\t" 
+             << fixed << setprecision(2) << product.price << "\t" 
+             << product.stock << endl;
     }
 }
 
+void addProduct(vector<Product>& inventory) {
+    Product newProduct;
+    cout << "Masukkan kode produk (3 digit): ";
+    cin >> newProduct.id;
+    cout << "Masukkan nama produk: ";
+    cin.ignore();
+    getline(cin, newProduct.name);
+    cout << "Masukkan harga produk: ";
+    cin >> newProduct.price;
+    cout << "Masukkan jumlah stok awal: ";
+    cin >> newProduct.stock;
 
-    void recordSale(double amount) {
-        totalSales += amount;
-        ++totalTransactions;
-    }
+    inventory.push_back(newProduct);
+    cout << "Produk berhasil ditambahkan!\n";
+}
 
-    std::vector<Product>& getInventory() { return inventory; }
-};
+void updateStock(vector<Product>& inventory) {
+    string productId;
+    int stockToAdd;
 
-// Staff functionalities
-class StaffSystem {
-    AdminSystem& admin;
-    std::vector<Product>& inventory;
+    cout << "Masukkan kode produk: ";
+    cin >> productId;
+    cout << "Masukkan jumlah stok masuk: ";
+    cin >> stockToAdd;
 
-public:
-    StaffSystem(AdminSystem& admin, std::vector<Product>& inventory) : admin(admin), inventory(inventory) {}
-
-   void processSale() {
-    std::string productId;
-    int quantity;
-    double total = 0.0;
-
-    // Tampilkan daftar produk
-    std::cout << "\nAvailable Products:\n";
-    for (const auto& product : inventory) {
-        std::cout << "ID: " << product.getId()
-                  << ", Name: " << product.getName()
-                  << ", Price: " << product.getPrice()
-                  << ", Stock: " << product.getStock() << "\n";
-    }
-
-    // Input kode produk
-    std::cout << "\nEnter product code: ";
-    std::cin >> productId;
-    std::cout << "Enter quantity: ";
-    std::cin >> quantity;
-
-    // Proses penjualan
     for (auto& product : inventory) {
-        if (product.getId() == productId) {
-            if (product.getStock() < quantity) {
-                std::cout << "Not enough stock available!\n";
-                return;
-            }
-
-            product.reduceStock(quantity);
-            total = product.getPrice() * quantity;
-            admin.recordSale(total);
-
-            std::cout << "Sale processed successfully!\n";
-            std::cout << "Total: " << total << "\n";
-            printReceipt(product.getName(), quantity, total);
+        if (product.id == productId) {
+            product.stock += stockToAdd;
+            cout << "Stok berhasil diperbarui!\n";
             return;
         }
     }
 
-    std::cout << "Product not found!\n";
+    cout << "Produk tidak ditemukan!\n";
 }
 
+void processSale(vector<Product>& inventory, double& totalSales, int& totalTransactions) {
+    string productId;
+    int quantity;
 
-    void checkPrice() {
-        std::string productId;
+    cout << "Masukkan kode produk: ";
+    cin >> productId;
+    cout << "Masukkan jumlah: ";
+    cin >> quantity;
 
-        std::cout << "Enter product code to check price: ";
-        std::cin >> productId;
+    for (auto& product : inventory) {
+        if (product.id == productId) {
+            if (product.stock >= quantity) {
+                double total = product.price * quantity;
+                product.stock -= quantity;
+                totalSales += total;
+                totalTransactions++;
 
-        for (const auto& product : inventory) {
-            if (product.getId() == productId) {
-                std::cout << "Price of " << product.getName() << ": " << product.getPrice() << "\n";
+                cout << "Penjualan berhasil diproses!\n";
+                cout << "Total Harga: " << fixed << setprecision(2) << total << endl;
+
+                cout << "\n=== Struk ===\n";
+                cout << "Produk: " << product.name << "\n";
+                cout << "Jumlah: " << quantity << "\n";
+                cout << "Total: " << total << "\n";
+                cout << "=============\n";
+                return;
+            } else {
+                cout << "Stok tidak mencukupi!\n";
                 return;
             }
         }
-
-        std::cout << "Product not found!\n";
     }
 
-    void checkStock() {
-        std::string productId;
+    cout << "Produk tidak ditemukan!\n";
+}
 
-        std::cout << "Enter product code to check stock: ";
-        std::cin >> productId;
+void checkPrice(const vector<Product>& inventory) {
+    string productId;
 
-        for (const auto& product : inventory) {
-            if (product.getId() == productId) {
-                std::cout << "Stock of " << product.getName() << ": " << product.getStock() << "\n";
-                return;
-            }
-        }
+    cout << "Masukkan kode produk: ";
+    cin >> productId;
 
-        std::cout << "Product not found!\n";
-    }
-
-    void updateOutgoingStock() {
-        std::string productId;
-        int quantity;
-
-        std::cout << "Enter product code: ";
-        std::cin >> productId;
-        std::cout << "Enter quantity to remove: ";
-        std::cin >> quantity;
-
-        for (auto& product : inventory) {
-            if (product.getId() == productId) {
-                if (product.getStock() < quantity) {
-                    std::cout << "Not enough stock available to remove!\n";
-                    return;
-                }
-
-                product.reduceStock(quantity);
-                std::cout << "Stock updated successfully!\n";
-                return;
-            }
-        }
-
-        std::cout << "Product not found!\n";
-    }
-
-    void viewLowStock() {
-        std::cout << "\nLow Stock Products:\n";
-        for (const auto& product : inventory) {
-            if (product.isLowStock()) {
-                std::cout << "ID: " << product.getId() << ", Name: " << product.getName() << ", Stock: " << product.getStock() << "\n";
-            }
+    for (const auto& product : inventory) {
+        if (product.id == productId) {
+            cout << "Harga produk " << product.name << ": " << fixed << setprecision(2) << product.price << endl;
+            return;
         }
     }
 
-    void reportToAdmin() {
-        std::cout << "Low stock report sent to admin!\n";
-    }
+    cout << "Produk tidak ditemukan!\n";
+}
 
-private:
-    void printReceipt(const std::string& productName, int quantity, double total) {
-        std::string receiptFileName = "receipt.txt";
-        std::ofstream receiptFile(receiptFileName);
+void checkStock(const vector<Product>& inventory) {
+    string productId;
+    cout << "Masukkan kode produk: ";
+    cin >> productId;
 
-        if (receiptFile.is_open()) {
-            receiptFile << "Receipt\n";
-            receiptFile << "====================\n";
-            receiptFile << "Product: " << productName << "\n";
-            receiptFile << "Quantity: " << quantity << "\n";
-            receiptFile << "Total: " << std::fixed << std::setprecision(2) << total << "\n";
-            receiptFile << "Thank you for your purchase!\n";
-            receiptFile.close();
-            std::cout << "\nReceipt has been saved to '" << receiptFileName << "'\n";
-        } else {
-            std::cout << "Failed to save the receipt to file.\n";
+    for (const auto& product : inventory) {
+        if (product.id == productId) {
+            cout << "Stok tersedia untuk " << product.name << ": " << product.stock << endl;
+            return;
         }
-
-        // Print to console as well
-        std::cout << "\nReceipt:\n";
-        std::cout << "Product: " << productName << "\n";
-        std::cout << "Quantity: " << quantity << "\n";
-        std::cout << "Total: " << total << "\n";
-        std::cout << "Thank you for your purchase!\n\n";
     }
-};
+
+    cout << "Produk tidak ditemukan!\n";
+}
+
+void viewLowStock(const vector<Product>& inventory) {
+    cout << "\nProduk dengan Stok Menipis (kurang dari 10):\n";
+    for (const auto& product : inventory) {
+        if (product.stock < 10) {
+            cout << "ID: " << product.id << ", Nama: " << product.name << ", Stok: " << product.stock << endl;
+        }
+    }
+}
+
+void printReport(double totalSales, int totalTransactions) {
+    cout << "\n=== Laporan Harian ===\n";
+    cout << "Total Transaksi: " << totalTransactions << endl;
+    cout << "Total Pendapatan: " << fixed << setprecision(2) << totalSales << endl;
+    cout << "======================\n";
+}
 
 int main() {
-    AdminSystem admin;
-    std::vector<Product>& inventory = admin.getInventory();
-    StaffSystem staff(admin, inventory);
+    vector<Product> inventory = {
+        {"001", "Mie Instan", 3000.0, 50},
+        {"002", "Kopi", 5000.0, 30}
+    };
 
-    int userType;
+    double totalSales = 0.0;
+    int totalTransactions = 0;
+
+    int role, choice;
     do {
-        std::cout << "\nWelcome!\n1. Admin\n2. Staff\n0. Exit\nChoose your role: ";
-        std::cin >> userType;
+        cout << "\nPilih Peran:\n1. Admin\n2. Staff\n0. Keluar\nPilih: ";
+        cin >> role;
 
-        if (userType == 1) {
-            int choice;
+        if (role == 1) { // Admin
             do {
-                std::cout << "\nAdmin Menu:\n";
-                std::cout << "1. Add Product\n2. View Products\n3. Update Stock\n4. Generate Report\n0. Back to Main Menu\n";
-                std::cout << "Enter your choice: ";
-                std::cin >> choice;
+                cout << "\nMenu Admin:\n";
+                cout << "1. Tambah Produk\n";
+                cout << "2. Lihat Daftar Produk\n";
+                cout << "3. Update Stok Masuk\n";
+                cout << "4. Cetak Laporan Harian\n";
+                cout << "0. Kembali\n";
+                cout << "Pilih: ";
+                cin >> choice;
 
                 switch (choice) {
-                    case 1:
-                        admin.addProduct();
-                        break;
-                    case 2:
-                        admin.viewProducts();
-                        break;
-                    case 3:
-                        admin.updateStock();
-                        break;
-                    case 4:
-                        admin.generateReport();
-                        break;
-                    case 0:
-                        std::cout << "Returning to Main Menu...\n";
-                        break;
-                    default:
-                        std::cout << "Invalid choice!\n";
-                        break;
+                    case 1: addProduct(inventory); break;
+                    case 2: viewProducts(inventory); break;
+                    case 3: updateStock(inventory); break;
+                    case 4: printReport(totalSales, totalTransactions); break;
+                    case 0: cout << "Kembali ke menu utama...\n"; break;
+                    default: cout << "Pilihan tidak valid!\n"; break;
                 }
             } while (choice != 0);
-        } else if (userType == 2) {
-            int choice;
+        } else if (role == 2) { // Staff
             do {
-                std::cout << "\nStaff Menu:\n";
-                std::cout << "1. Process Sale\n2. Check Product Price\n3. Check Product Stock\n4. Update Outgoing Stock\n5. View Low Stock Products\n6. Report Low Stock to Admin\n0. Back to Main Menu\n";
-                std::cout << "Enter your choice: ";
-                std::cin >> choice;
+                cout << "\nMenu Staff:\n";
+                cout << "1. Proses Penjualan\n";
+                cout << "2. Cek Harga Produk\n";
+                cout << "3. Cek Stok Produk\n";
+                cout << "4. Lihat Stok Menipis\n";
+                cout << "0. Kembali\n";
+                cout << "Pilih: ";
+                cin >> choice;
 
                 switch (choice) {
-                    case 1:
-                        staff.processSale();
-                        break;
-                    case 2:
-                        staff.checkPrice();
-                        break;
-                    case 3:
-                        staff.checkStock();
-                        break;
-                    case 4:
-                        staff.updateOutgoingStock();
-                        break;
-                    case 5:
-                        staff.viewLowStock();
-                        break;
-                    case 6:
-                        staff.reportToAdmin();
-                        break;
-                    case 0:
-                        std::cout << "Returning to Main Menu...\n";
-                        break;
-                    default:
-                        std::cout << "Invalid choice!\n";
-                        break;
+                    case 1: processSale(inventory, totalSales, totalTransactions); break;
+                    case 2: checkPrice(inventory); break;
+                    case 3: checkStock(inventory); break;
+                    case 4: viewLowStock(inventory); break;
+                    case 0: cout << "Kembali ke menu utama...\n"; break;
+                    default: cout << "Pilihan tidak valid!\n"; break;
                 }
             } while (choice != 0);
-        } else if (userType == 0) {
-            std::cout << "Exiting the program...\n";
+        } else if (role == 0) {
+            cout << "Keluar dari program...\n";
         } else {
-            std::cout << "Invalid role! Please choose again.\n";
+            cout << "Pilihan tidak valid!\n";
         }
-    } while (userType != 0);
+    } while (role != 0);
 
     return 0;
 }
-
